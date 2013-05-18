@@ -97,6 +97,13 @@ public class Scroll extends JavaPlugin implements Listener {
     }
 
     @Override
+    public void onDisable() {
+        for (final Player player : this.getServer().getOnlinePlayers()) {
+            this.unregister(player);
+        }
+    }
+
+    @Override
     public void onEnable() {
         this.saveDefaultConfig();
         this.reloadConfig();
@@ -143,5 +150,12 @@ public class Scroll extends JavaPlugin implements Listener {
         team.addPlayer(player);
         team.setSuffix("                ");
         this.queues.put(player.getName(), new LinkedList<Character>());
+    }
+
+    private void unregister(Player player) {
+        final Team team = this.board.getTeam(player.getName());
+        if (team != null) {
+            team.unregister();
+        }
     }
 }
