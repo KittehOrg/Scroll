@@ -52,6 +52,21 @@ public final class Scroll extends JavaPlugin implements Listener {
         }
     }
 
+    private class QueueRemoval implements Runnable {
+        private final String name;
+
+        private QueueRemoval(String name) {
+            this.name = name;
+        }
+
+        @Override
+        public void run() {
+            if (Scroll.this.getServer().getPlayerExact(this.name) == null) {
+                Scroll.this.queues.remove(this.name);
+            }
+        }
+    }
+
     /**
      * Available chat-bar chat visibility settings
      */
@@ -170,14 +185,7 @@ public final class Scroll extends JavaPlugin implements Listener {
         if (team != null) {
             team.unregister();
         }
-        this.getServer().getScheduler().runTaskLater(this, new Runnable() {
-            @Override
-            public void run() {
-                if (Scroll.this.getServer().getPlayerExact(name) == null) {
-                    Scroll.this.queues.remove(name);
-                }
-            }
-        }, 10);
+        this.getServer().getScheduler().runTaskLater(this, new QueueRemoval(name), 10);
     }
 
     private void register(Player player) {
