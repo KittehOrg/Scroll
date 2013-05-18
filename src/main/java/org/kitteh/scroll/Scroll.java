@@ -37,7 +37,7 @@ import org.bukkit.scoreboard.Team;
 
 import com.google.common.collect.ImmutableList;
 
-public class Scroll extends JavaPlugin implements Listener {
+public final class Scroll extends JavaPlugin implements Listener {
     private class Bump implements Runnable {
         @Override
         public void run() {
