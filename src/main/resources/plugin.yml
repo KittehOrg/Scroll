@@ -1,0 +1,5 @@
+name: Scroll
+main: org.kitteh.scroll.Scroll
+author: hawkfalcon
+authors: [hawkfalcon, mbaxter]
+version: '${project.version}'
