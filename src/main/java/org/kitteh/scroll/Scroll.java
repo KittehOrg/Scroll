@@ -19,6 +19,7 @@
 package org.kitteh.scroll;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -37,10 +38,6 @@ import org.bukkit.scoreboard.Team;
 import com.google.common.collect.ImmutableList;
 
 public class Scroll extends JavaPlugin implements Listener {
-    private static final List<Character> SPACER = ImmutableList.of(' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ');
-    private final Map<String, List<Character>> queues = new HashMap<String, List<Character>>();
-    private Scoreboard board;
-
     private class Bump implements Runnable {
         @Override
         public void run() {
@@ -55,9 +52,40 @@ public class Scroll extends JavaPlugin implements Listener {
         }
     }
 
+    private enum ChatVisibility {
+        ALL,
+        SELF,
+        NONE;
+        private static Map<String, ChatVisibility> map = new HashMap<String, ChatVisibility>();
+
+        static {
+            for (final ChatVisibility chat : ChatVisibility.values()) {
+                ChatVisibility.map.put(chat.name().toLowerCase(), chat);
+            }
+        }
+
+        public static ChatVisibility match(String chat) {
+            return ChatVisibility.map.get(chat.toLowerCase());
+        }
+    }
+
+    private static final List<Character> SPACER = ImmutableList.of(' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ');
+    private final Map<String, List<Character>> queues = new HashMap<String, List<Character>>();
+    private Scoreboard board;
+    private ChatVisibility visibility;
+
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onChat(AsyncPlayerChatEvent event) {
-        event.setCancelled(true);
+        if (this.visibility != ChatVisibility.ALL) {
+            final Iterator<Player> iterator = event.getRecipients().iterator();
+            while (iterator.hasNext()) {
+                final Player player = iterator.next();
+                if ((this.visibility == ChatVisibility.SELF) && player.equals(event.getPlayer())) {
+                    continue;
+                }
+                iterator.remove();
+            }
+        }
         final List<Character> queue = this.queues.get(event.getPlayer().getName());
         final String message = event.getMessage();
         final List<Character> split = new LinkedList<Character>();
@@ -70,6 +98,13 @@ public class Scroll extends JavaPlugin implements Listener {
 
     @Override
     public void onEnable() {
+        this.saveDefaultConfig();
+        this.reloadConfig();
+        final String chat = this.getConfig().getString("chat.visibility", "none");
+        this.visibility = ChatVisibility.match(chat);
+        if (this.visibility == null) {
+            this.visibility = ChatVisibility.NONE;
+        }
         this.getServer().getPluginManager().registerEvents(this, this);
         this.board = this.getServer().getScoreboardManager().getMainScoreboard();
         for (final Player player : this.getServer().getOnlinePlayers()) {
@@ -81,16 +116,6 @@ public class Scroll extends JavaPlugin implements Listener {
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
         this.register(event.getPlayer());
-    }
-
-    private void register(Player player) {
-        Team team = this.board.getTeam(player.getName());
-        if (team == null) {
-            team = this.board.registerNewTeam(player.getName());
-        }
-        team.addPlayer(player);
-        team.setSuffix("                ");
-        this.queues.put(player.getName(), new LinkedList<Character>());
     }
 
     @EventHandler
@@ -108,5 +133,15 @@ public class Scroll extends JavaPlugin implements Listener {
                 }
             }
         }, 10);
+    }
+
+    private void register(Player player) {
+        Team team = this.board.getTeam(player.getName());
+        if (team == null) {
+            team = this.board.registerNewTeam(player.getName());
+        }
+        team.addPlayer(player);
+        team.setSuffix("                ");
+        this.queues.put(player.getName(), new LinkedList<Character>());
     }
 }
