@@ -52,10 +52,23 @@ public class Scroll extends JavaPlugin implements Listener {
         }
     }
 
-    private enum ChatVisibility {
+    /**
+     * Available chat-bar chat visibility settings
+     */
+    public enum ChatVisibility {
+        /**
+         * Chat goes to chat as normal
+         */
         ALL,
+        /**
+         * Only the player speaking will see his/her chat
+         */
         SELF,
+        /**
+         * Nobody sees chat
+         */
         NONE;
+
         private static Map<String, ChatVisibility> map = new HashMap<String, ChatVisibility>();
 
         static {
@@ -64,8 +77,15 @@ public class Scroll extends JavaPlugin implements Listener {
             }
         }
 
-        public static ChatVisibility match(String chat) {
-            return ChatVisibility.map.get(chat.toLowerCase());
+        /**
+         * Matches a given String to a ChatVisibility
+         * Takes any case, returns null if no match
+         *
+         * @param match the string to match
+         * @return a matched ChatVisibility or null if no match
+         */
+        public static ChatVisibility match(String match) {
+            return ChatVisibility.map.get(match.toLowerCase());
         }
     }
 
@@ -73,6 +93,31 @@ public class Scroll extends JavaPlugin implements Listener {
     private final Map<String, List<Character>> queues = new HashMap<String, List<Character>>();
     private Scoreboard board;
     private ChatVisibility visibility;
+
+    /**
+     * Queues a message for the player to scroll
+     *
+     * @param player player who is speaking
+     * @param message message to be said
+     */
+    public synchronized void addMessage(Player player, String message) {
+        final List<Character> split = new LinkedList<Character>();
+        for (final char c : message.toCharArray()) {
+            split.add(c);
+        }
+        final List<Character> queue = this.queues.get(player.getName());
+        queue.addAll(split);
+        queue.addAll(Scroll.SPACER);
+    }
+
+    /**
+     * Gets the currently set chat visibility
+     *
+     * @return current chat visibility setting
+     */
+    public ChatVisibility getChatVisibility() {
+        return this.visibility;
+    }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onChat(AsyncPlayerChatEvent event) {
@@ -86,14 +131,7 @@ public class Scroll extends JavaPlugin implements Listener {
                 iterator.remove();
             }
         }
-        final List<Character> queue = this.queues.get(event.getPlayer().getName());
-        final String message = event.getMessage();
-        final List<Character> split = new LinkedList<Character>();
-        for (final char c : message.toCharArray()) {
-            split.add(c);
-        }
-        queue.addAll(split);
-        queue.addAll(Scroll.SPACER);
+        this.addMessage(event.getPlayer(), event.getMessage());
     }
 
     @Override
