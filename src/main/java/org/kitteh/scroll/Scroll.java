@@ -120,11 +120,11 @@ public class Scroll extends JavaPlugin implements Listener {
 
     @EventHandler
     public void onQuit(PlayerQuitEvent event) {
-        final Team team = this.board.getTeam(event.getPlayer().getName());
+        final String name = event.getPlayer().getName();
+        final Team team = this.board.getTeam(name);
         if (team != null) {
             team.unregister();
         }
-        final String name = event.getPlayer().getName();
         this.getServer().getScheduler().runTaskLater(this, new Runnable() {
             @Override
             public void run() {
