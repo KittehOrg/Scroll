@@ -1,2 +1,5 @@
 chat:
   visibility: self
+ticks:
+  bounce: 3
+  delay: 3
