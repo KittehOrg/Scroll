@@ -170,7 +170,7 @@ public final class Scroll extends JavaPlugin implements Listener {
         for (final Player player : this.getServer().getOnlinePlayers()) {
             this.register(player);
         }
-        this.getServer().getScheduler().runTaskTimer(this, new Bump(), 3, 3);
+        this.getServer().getScheduler().runTaskTimer(this, new Bump(), getConfig().getInt("ticks.delay"), getConfig().getInt("ticks.bounce");
     }
 
     @EventHandler
